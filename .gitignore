@@ -28,3 +28,7 @@ Thumbs.db
 # Claude Code (configurações pessoais e conversas não vão pro repo)
 .claude/settings.local.json
 .claude/*.jsonl
+
+# Arquivos de lock do LibreOffice/Word
+.~lock.*#
+~$*
