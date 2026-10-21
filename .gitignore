@@ -1,0 +1,26 @@
+# Build (CLion / CMake)
+cmake-build-*/
+build/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+Testing/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*~
+
+# Binários e objetos
+*.o
+*.obj
+*.a
+*.so
+*.out
+*.exe
+
+# Sistema
+.DS_Store
+Thumbs.db
