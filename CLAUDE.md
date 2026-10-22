@@ -16,7 +16,7 @@ Grupo:
   (passos, estados ativos, entrada consumida/restante, árvore de caminhos e resultado
   ACEITA/REJEITADA).
 - **Interface web** (o usuário acessa pelo navegador; terminal não serve para os desenhos):
-  - **Servidor Python (Flask):** chama o executável C via `subprocess`, abre/salva os
+  - **Servidor Python (FastAPI ou Flask, issue #17):** chama o executável C via `subprocess`, abre/salva os
     arquivos de autômato e entrega o JSON para as páginas.
   - **Páginas HTML/CSS/JS:** telas de especificação e de passo-a-passo, desenho do
     autômato e da árvore de execução.
@@ -57,7 +57,7 @@ antiga, baixar o mínimo em vez de atualizar a máquina.
 
 - `relatorio/`: documentos do relatório (esboço em .docx; a versão final vai em PDF).
 - Pendências estão nas **issues do GitHub** (milestone "Entrega 02/12/2026", labels
-  `nucleo-c`, `python-visual`, `exemplos`, `entrega`). Ver com `gh issue list`.
+  `nucleo-c`, `interface-web`, `exemplos`, `entrega`). Ver com `gh issue list`.
 - O zip final precisa conter código-fonte, instruções de execução, exemplos e o
   relatório PDF (só o link do repositório não vale).
 
