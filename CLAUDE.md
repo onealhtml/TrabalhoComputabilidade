@@ -5,7 +5,8 @@ Trabalho da disciplina de Computabilidade (UNISC, Prof. Ivan L. Süptitz).
 
 Grupo:
 - Lorenzo Farias (`onealhtml`): núcleo em C
-- Pedro Buchaim (`Tinpack`): interface em Python
+- Pedro Cabral Buchaim (`Tinpack`): servidor em Python e desenho do autômato/árvore
+- João Vitor Cossettin Napoleão: páginas web (HTML, CSS, JS), layout e testes de uso
 - Bernardo Soares Nunes (`besoaresn`): exemplos, README e relatório
 
 ## Arquitetura
@@ -14,9 +15,12 @@ Grupo:
   arquivo do autômato e a sentença e imprime na saída padrão o trace da execução em JSON
   (passos, estados ativos, entrada consumida/restante, árvore de caminhos e resultado
   ACEITA/REJEITADA).
-- **Python (interface):** só interação e visualização. Chama o executável C via
-  `subprocess`, lê o JSON e desenha o autômato, a árvore de execução e o passo-a-passo.
-  Não reimplementar lógica do autômato no Python.
+- **Interface web** (o usuário acessa pelo navegador; terminal não serve para os desenhos):
+  - **Servidor Python (Flask):** chama o executável C via `subprocess`, abre/salva os
+    arquivos de autômato e entrega o JSON para as páginas.
+  - **Páginas HTML/CSS/JS:** telas de especificação e de passo-a-passo, desenho do
+    autômato e da árvore de execução.
+  Nem o servidor nem as páginas reimplementam lógica do autômato.
 
 O formato do arquivo do autômato (issue #1) e o schema do JSON (issue #6) são o contrato
 entre as duas partes; mudanças neles precisam ser combinadas no grupo.
