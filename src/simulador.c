@@ -31,13 +31,6 @@ Conjunto fecho_epsilon(const Automato *a, Conjunto c) {
     return c;
 }
 
-Conjunto fecho_epsilon_estado(const Automato *a, int estado) {
-    Conjunto c;
-    conjunto_limpar(&c);
-    c.tem[estado] = true;
-    return fecho_epsilon(a, c);
-}
-
 Conjunto mover(const Automato *a, const Conjunto *c, int simbolo) {
     Conjunto resultado;
     conjunto_limpar(&resultado);
@@ -88,18 +81,14 @@ static bool ciclo_epsilon(const Execucao *ex, int no, int estado) {
     return false;
 }
 
-static bool adicionar_no(Execucao *ex, int pai, int estado, int posicao, int simbolo) {
-    if (ex->num_nos >= MAX_NOS) {
-        ex->arvore_truncada = true;
-        return false;
-    }
+/* Acrescenta um nó no fim do vetor (quem chama garante que há espaço). */
+static void adicionar_no(Execucao *ex, int pai, int estado, int posicao, int simbolo) {
     No *n = &ex->nos[ex->num_nos++];
     n->estado = estado;
     n->pai = pai;
     n->posicao = posicao;
     n->simbolo = simbolo;
     n->status = NO_CORTADO;   /* muda quando o nó for expandido */
-    return true;
 }
 
 /*
@@ -110,6 +99,9 @@ static bool adicionar_no(Execucao *ex, int pai, int estado, int posicao, int sim
  *     posição, para não entrar em ciclo) e um filho para cada destino lendo o
  *     próximo símbolo;
  *   - se não criou nenhum filho, o caminho MORREU.
+ * Um nó tem no máximo um filho por estado lendo ε e um por estado lendo o
+ * símbolo. Se o vetor não comporta esse pior caso, a construção para: o nó
+ * atual e os que ainda estão na fila ficam NO_CORTADO.
  */
 static void construir_arvore(const Automato *a, Execucao *ex) {
     ex->num_nos = 0;
@@ -125,31 +117,29 @@ static void construir_arvore(const Automato *a, Execucao *ex) {
             continue;
         }
 
-        int filhos = 0;
-        bool cheia = false;
+        if (ex->num_nos + 2 * a->num_estados > MAX_NOS) {
+            ex->arvore_truncada = true;
+            break;
+        }
 
-        for (int d = 0; d < a->num_estados && !cheia; d++) {
+        int filhos = 0;
+        for (int d = 0; d < a->num_estados; d++) {
             if (a->delta[estado][EPSILON].tem[d] && !ciclo_epsilon(ex, i, d)) {
-                if (adicionar_no(ex, i, d, posicao, EPSILON)) filhos++;
-                else cheia = true;
+                adicionar_no(ex, i, d, posicao, EPSILON);
+                filhos++;
             }
         }
 
         if (posicao < ex->tamanho) {
             int simbolo = automato_indice_simbolo(a, ex->sentenca[posicao]);
-            for (int d = 0; d < a->num_estados && !cheia; d++) {
+            for (int d = 0; d < a->num_estados; d++) {
                 if (a->delta[estado][simbolo].tem[d]) {
-                    if (adicionar_no(ex, i, d, posicao + 1, simbolo)) filhos++;
-                    else cheia = true;
+                    adicionar_no(ex, i, d, posicao + 1, simbolo);
+                    filhos++;
                 }
             }
         }
 
-        if (cheia) {
-            /* Sem espaço: este nó e os que ainda estão na fila ficam NO_CORTADO. */
-            ex->nos[i].status = filhos > 0 ? NO_INTERNO : NO_CORTADO;
-            break;
-        }
         ex->nos[i].status = filhos > 0 ? NO_INTERNO : NO_MORTO;
     }
 }

@@ -56,7 +56,6 @@ typedef struct {
 
 /* Fecho-ε: todos os estados alcançáveis a partir de 'c' usando só transições ε. */
 Conjunto fecho_epsilon(const Automato *a, Conjunto c);
-Conjunto fecho_epsilon_estado(const Automato *a, int estado);
 
 /* União dos destinos de todos os estados de 'c' lendo o símbolo s. */
 Conjunto mover(const Automato *a, const Conjunto *c, int simbolo);
