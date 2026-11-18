@@ -16,14 +16,17 @@ Grupo:
   (passos, estados ativos, entrada consumida/restante, árvore de caminhos e resultado
   ACEITA/REJEITADA).
 - **Interface web** (o usuário acessa pelo navegador; terminal não serve para os desenhos):
-  - **Servidor Python (FastAPI ou Flask, issue #17):** chama o executável C via `subprocess`, abre/salva os
-    arquivos de autômato e entrega o JSON para as páginas.
-  - **Páginas HTML/CSS/JS:** telas de especificação e de passo-a-passo, desenho do
-    autômato e da árvore de execução.
+  - **Servidor Python (Flask, `servidor/app.py`):** chama o executável C via `subprocess`
+    (comandos `info`, `simular`, `salvar`) e entrega o JSON para as páginas.
+  - **Páginas HTML/CSS/JS (`servidor/static/`):** telas de especificação e de passo-a-passo,
+    desenho do autômato e da árvore com Cytoscape.js (vendorizado em `static/vendor/`, sem CDN).
   Nem o servidor nem as páginas reimplementam lógica do autômato.
 
-O formato do arquivo do autômato (issue #1) e o schema do JSON (issue #6) são o contrato
-entre as duas partes; mudanças neles precisam ser combinadas no grupo.
+O formato do arquivo do autômato e o schema do JSON estão em `docs/formato.md` e são o
+contrato entre as partes; mudanças neles precisam ser combinadas no grupo.
+
+Núcleo em `src/`: `automato.*` (estruturas), `arquivo.*` (abrir/salvar), `simulador.*`
+(fecho-ε, passos por conjuntos e árvore de caminhos), `json.*` e `main.c` (CLI).
 
 ## Requisitos da especificação
 
@@ -47,15 +50,19 @@ código deve ser simples de explicar.
 ```sh
 cmake -S . -B cmake-build-debug
 cmake --build cmake-build-debug
-./cmake-build-debug/TrabalhoComputabilidade
+python testes/testar.py                 # testes (ou ctest --test-dir cmake-build-debug)
+python -m pip install -r requirements.txt
+python servidor/app.py                  # http://127.0.0.1:5000
 ```
 
-O `CMakeLists.txt` pede CMake 4.3 e C23 (padrão do CLion); se alguém tiver versão mais
-antiga, baixar o mínimo em vez de atualizar a máquina.
+O `CMakeLists.txt` pede CMake 3.10 e C11 para compilar em qualquer máquina. Os exemplos
+(`exemplos/*.afn`) têm comentários `# aceita:` / `# rejeita:` usados pelos testes.
 
 ## Organização
 
-- `relatorio/`: documentos do relatório (esboço em .docx; a versão final vai em PDF).
+- `relatorio/`: `Relatório.docx` (editável) e `Relatório.pdf` (entregue); o esboço ficou como histórico.
+- `docs/apresentacao.md`: divisão e roteiro da apresentação.
+- `python empacotar.py` gera `dist/TrabalhoComputabilidade.zip` para a entrega.
 - Pendências estão nas **issues do GitHub** (milestone "Entrega 02/12/2026", labels
   `nucleo-c`, `interface-web`, `exemplos`, `entrega`). Ver com `gh issue list`.
 - O zip final precisa conter código-fonte, instruções de execução, exemplos e o

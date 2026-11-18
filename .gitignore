@@ -32,3 +32,11 @@ Thumbs.db
 # Arquivos de lock do LibreOffice/Word
 .~lock.*#
 ~$*
+
+# Python
+__pycache__/
+.venv/
+venv/
+
+# Zip da entrega (gerado por empacotar.py)
+dist/
