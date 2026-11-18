@@ -4,21 +4,18 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Simulador de AFND</title>
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Ccircle cx=%2716%27 cy=%2716%27 r=%2714%27 fill=%27%233949ab%27/%3E%3Ccircle cx=%2716%27 cy=%2716%27 r=%279%27 fill=%27none%27 stroke=%27white%27 stroke-width=%272%27/%3E%3C/svg%3E">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Ccircle cx=%2716%27 cy=%2716%27 r=%2714%27 fill=%27white%27 stroke=%27%231c3d8c%27 stroke-width=%272.5%27/%3E%3Ccircle cx=%2716%27 cy=%2716%27 r=%278.5%27 fill=%27%23ffe45e%27 stroke=%27%231c3d8c%27 stroke-width=%272.5%27/%3E%3C/svg%3E">
     <link rel="stylesheet" href="estilo.css">
 </head>
 <body>
 <header class="topo">
     <div class="marca">
-        <span class="logo">q₀</span>
-        <div>
-            <h1>Simulador de AFND / AFND-ε</h1>
-            <p>Computabilidade · UNISC</p>
-        </div>
+        <h1>Simulador de AFND e AFND-ε</h1>
+        <p>Computabilidade, UNISC</p>
     </div>
-    <nav class="abas">
-        <button class="aba ativa" data-tela="especificacao">1. Especificação</button>
-        <button class="aba" data-tela="execucao">2. Execução passo a passo</button>
+    <nav class="abas" aria-label="Telas">
+        <button class="aba ativa" data-tela="especificacao"><span class="num">1</span> Especificação</button>
+        <button class="aba" data-tela="execucao"><span class="num">2</span> Execução passo a passo</button>
     </nav>
 </header>
 
@@ -30,104 +27,116 @@
             <label class="botao">Abrir arquivo…
                 <input type="file" id="arquivo-abrir" accept=".afn,.txt" hidden>
             </label>
-            <span class="grupo">
-                <input id="nome-arquivo" value="automato" aria-label="Nome do arquivo" size="14">
-                <button id="btn-salvar">Salvar arquivo (.afn)</button>
+            <span class="grupo salvar">
+                <span class="nome-arquivo">
+                    <input id="nome-arquivo" value="automato" aria-label="Nome do arquivo" size="14">
+                    <span class="extensao">.afn</span>
+                </span>
+                <button id="btn-salvar">Salvar arquivo</button>
             </span>
-            <span class="grupo">
-                <label for="sel-exemplo">Exemplo:</label>
-                <select id="sel-exemplo"><option value="">— escolher —</option></select>
+            <span class="grupo exemplo">
+                <label for="sel-exemplo">Exemplo</label>
+                <select id="sel-exemplo"><option value="">escolher…</option></select>
             </span>
         </div>
 
         <div class="colunas">
-            <div class="painel">
-                <h2>Definição</h2>
+            <section class="bloco definicao">
+                <h2 class="tupla" title="Um autômato é a quíntupla (estados, alfabeto, transições, estado inicial, estados finais)">
+                    <i>M</i> = (<i>Q</i>, Σ, δ, <i>q</i><sub>0</sub>, <i>F</i>)</h2>
+
                 <div class="campo">
-                    <label for="campo-alfabeto">Alfabeto (Σ)</label>
+                    <label for="campo-alfabeto"><span class="simbolo">Σ</span> Alfabeto</label>
                     <input id="campo-alfabeto" placeholder="símbolos separados por espaço, ex.: a b c">
                     <small>Cada símbolo é um único caractere. <code>&amp;</code> é reservado para ε.</small>
                 </div>
                 <div class="campo">
-                    <label for="campo-estados">Estados (Q)</label>
+                    <label for="campo-estados"><span class="simbolo"><i>Q</i></span> Estados</label>
                     <input id="campo-estados" placeholder="ex.: q0 q1 q2">
                 </div>
-                <div class="linha-campos">
-                    <div class="campo">
-                        <label for="campo-inicial">Estado inicial</label>
-                        <select id="campo-inicial"></select>
-                    </div>
-                    <div class="campo">
-                        <span class="rotulo">Estados finais (F)</span>
-                        <div id="campo-finais" class="checks"></div>
-                    </div>
+                <div class="campo">
+                    <label for="campo-inicial"><span class="simbolo"><i>q</i><sub>0</sub></span> Estado inicial</label>
+                    <select id="campo-inicial"></select>
+                </div>
+                <div class="campo">
+                    <span class="rotulo"><span class="simbolo"><i>F</i></span> Estados finais</span>
+                    <div id="campo-finais" class="checks"></div>
                 </div>
 
-                <div class="titulo-transicoes">
-                    <h3>Transições (δ)</h3>
-                    <div class="alternar">
-                        <button id="modo-tabela" class="ativo">Tabela</button>
-                        <button id="modo-lista">Lista</button>
+                <div class="campo transicoes">
+                    <div class="titulo-transicoes">
+                        <span class="rotulo"><span class="simbolo">δ</span> Transições</span>
+                        <div class="alternar" role="group" aria-label="Forma de editar as transições">
+                            <button id="modo-tabela" class="ativo">Tabela</button>
+                            <button id="modo-lista">Lista</button>
+                        </div>
                     </div>
+                    <small>Vários destinos: separe por espaço (ex.: <code>q1 q2</code>). A coluna
+                        <code>ε</code> é a transição vazia.</small>
+                    <div id="editor-tabela" class="rolagem"></div>
+                    <div id="editor-lista" hidden></div>
                 </div>
-                <p class="dica">Vários destinos: separe por espaço (ex.: <code>q1 q2</code>). A coluna/símbolo
-                    <b>ε</b> é a transição vazia.</p>
-                <div id="editor-tabela" class="rolagem"></div>
-                <div id="editor-lista" hidden></div>
-            </div>
+            </section>
 
-            <div class="painel">
-                <h2>Autômato</h2>
+            <section class="bloco">
+                <h2>Diagrama</h2>
                 <div id="validacao" class="aviso"></div>
                 <div id="grafo-especificacao" class="grafo"></div>
                 <details class="texto-arquivo">
                     <summary>Ver o arquivo .afn gerado</summary>
                     <pre id="previa-arquivo"></pre>
                 </details>
-            </div>
+            </section>
         </div>
     </section>
 
     <!-- ====================== TELA DE EXECUÇÃO ====================== -->
     <section id="tela-execucao" class="tela">
         <div class="barra">
-            <label for="campo-sentenca">Sentença:</label>
-            <input id="campo-sentenca" placeholder="deixe vazio para testar ε" size="28" autocomplete="off">
-            <button id="btn-executar" class="primario">Carregar sentença</button>
-            <span class="separador"></span>
-            <button id="btn-reiniciar" title="Reiniciar (Home)">⏮ Reiniciar</button>
-            <button id="btn-anterior" title="Passo anterior (←)">◀ Anterior</button>
-            <button id="btn-proximo" title="Próximo passo (→)">Próximo ▶</button>
-            <button id="btn-tudo" title="Executar tudo (End)">Executar tudo ⏭</button>
+            <span class="grupo sentenca">
+                <label for="campo-sentenca">Sentença <i class="w">w</i></label>
+                <input id="campo-sentenca" placeholder="vazia = ε" size="22" autocomplete="off" spellcheck="false">
+                <button id="btn-executar" class="primario">Carregar sentença</button>
+            </span>
+            <span class="grupo navegacao" role="group" aria-label="Navegar pelos passos">
+                <button id="btn-reiniciar" title="Reiniciar (Home)">⏮ Reiniciar</button>
+                <button id="btn-anterior" title="Passo anterior (←)">◀ Anterior</button>
+                <button id="btn-proximo" title="Próximo passo (→)">Próximo ▶</button>
+                <button id="btn-tudo" title="Executar tudo (End)">Executar tudo ⏭</button>
+            </span>
         </div>
         <div id="sugestoes" class="sugestoes"></div>
         <div id="erro-execucao" class="aviso erro" hidden></div>
 
+        <div id="fita" class="fita" aria-live="polite"></div>
+
         <div class="colunas execucao">
-            <div class="painel">
+            <section class="bloco">
                 <h2>Situação</h2>
                 <div id="situacao" class="situacao">
                     <p class="vazio">Digite uma sentença e clique em <b>Carregar sentença</b>.</p>
                 </div>
-            </div>
-            <div class="painel">
-                <h2>Autômato <small>(estados ativos destacados)</small></h2>
+            </section>
+            <section class="bloco">
+                <h2>Diagrama</h2>
                 <div id="grafo-execucao" class="grafo"></div>
-            </div>
+            </section>
         </div>
 
-        <div class="painel">
-            <h2>Árvore de fluxos de execução</h2>
-            <div class="legenda">
-                <span><i class="cor ativo"></i>caminho ativo</span>
-                <span><i class="cor interno"></i>já percorrido</span>
-                <span><i class="cor aceito"></i>aceita</span>
-                <span><i class="cor morto"></i>morreu</span>
-                <span><i class="cor cortado"></i>não expandido</span>
+        <section class="bloco">
+            <div class="titulo-arvore">
+                <h2>Árvore de fluxos de execução</h2>
+                <ul class="legenda">
+                    <li><i class="cor ativo"></i>caminho em andamento</li>
+                    <li><i class="cor interno"></i>já percorrido</li>
+                    <li><i class="cor aceito"></i>aceitou</li>
+                    <li><i class="cor morto"></i>morreu</li>
+                    <li><i class="cor cortado"></i>não expandido</li>
+                </ul>
             </div>
             <div id="aviso-arvore" class="aviso" hidden></div>
             <div id="grafo-arvore" class="grafo arvore"></div>
-        </div>
+        </section>
     </section>
 </main>
 

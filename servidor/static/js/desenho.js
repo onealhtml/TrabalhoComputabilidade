@@ -1,15 +1,20 @@
 // Desenho do autômato e da árvore de execução com Cytoscape.js (issues #7 e #8).
 // Os dados vêm sempre do JSON produzido pelo núcleo em C.
+//
+// Visual de caderno (mesmas cores do estilo.css): traços em caneta azul,
+// estados ativos e transições usadas com marca-texto amarelo, caminhos mortos
+// em vermelho e o caminho aceito em verde.
 
 cytoscape.use(cytoscapeDagre);
 
 const CORES = {
-    texto: "#1f2430", borda: "#4b5563", aresta: "#9ca3af", primaria: "#3949ab",
-    ativo: "#f59e0b", ativoClaro: "#fef3c7", aceito: "#2e7d32", aceitoClaro: "#e6f4ea",
-    morto: "#c62828", mortoClaro: "#fdecea", interno: "#9ca3af", cortado: "#a16207",
+    papel: "#ffffff", grafite: "#24262b", caneta: "#1c3d8c", marcaTexto: "#ffe45e",
+    verde: "#1d7244", verdeClaro: "#e0f1e7", vermelho: "#b8222b", vermelhoClaro: "#fbe5e6",
+    interno: "#9aa0aa", aresta: "#b4b9c3", cortado: "#9a7b1f",
 };
+const FONTE = "'STIX Two Text', Cambria, Georgia, serif";
 
-// Junta símbolos consecutivos do alfabeto: [0,1,...,9] vira "0-9".
+// Junta símbolos consecutivos do alfabeto: [0,1,...,9] vira "0–9".
 function rotuloSimbolos(simbolos, alfabeto) {
     const ordem = s => (s === EPSILON ? alfabeto.length : alfabeto.indexOf(s));
     const lista = [...simbolos].sort((a, b) => ordem(a) - ordem(b));
@@ -17,7 +22,7 @@ function rotuloSimbolos(simbolos, alfabeto) {
     for (let i = 0; i < lista.length;) {
         let j = i;
         while (j + 1 < lista.length && lista[j] !== EPSILON && ordem(lista[j + 1]) === ordem(lista[j]) + 1) j++;
-        partes.push(j - i >= 2 ? `${lista[i]}-${lista[j]}` : lista.slice(i, j + 1).join(", "));
+        partes.push(j - i >= 2 ? `${lista[i]}–${lista[j]}` : lista.slice(i, j + 1).join(", "));
         i = j + 1;
     }
     return partes.join(", ");
@@ -29,29 +34,32 @@ const ESTILO_AUTOMATO = [
     {
         selector: "node.estado", style: {
             "label": "data(label)", "text-valign": "center", "text-halign": "center",
-            "width": 46, "height": 46, "background-color": "#fff", "border-width": 2,
-            "border-color": CORES.borda, "font-size": 14, "font-weight": 600, "color": CORES.texto,
-            "transition-property": "background-color, border-color", "transition-duration": "0.2s",
+            "width": 48, "height": 48, "background-color": CORES.papel, "border-width": 2,
+            "border-color": CORES.caneta, "font-family": FONTE, "font-style": "italic", "font-size": 19,
+            "color": CORES.grafite,
+            "transition-property": "background-color, border-color", "transition-duration": "0.15s",
         },
     },
     {selector: "node.final", style: {"border-style": "double", "border-width": 7}},
     {selector: "node.inicio", style: {"width": 1, "height": 1, "opacity": 0}},
-    {selector: "node.ativo", style: {"background-color": CORES.ativoClaro, "border-color": CORES.ativo}},
-    {selector: "node.aceitando", style: {"background-color": CORES.aceitoClaro, "border-color": CORES.aceito}},
+    {selector: "node.ativo", style: {"background-color": CORES.marcaTexto}},
+    {selector: "node.aceitando", style: {"background-color": CORES.verdeClaro, "border-color": CORES.verde}},
     {
         selector: "edge", style: {
-            "curve-style": "bezier", "target-arrow-shape": "triangle", "width": 1.6,
-            "line-color": CORES.aresta, "target-arrow-color": CORES.aresta, "arrow-scale": 1.1,
-            "label": "data(label)", "font-size": 13, "color": CORES.texto,
-            "text-background-color": "#fbfcfe", "text-background-opacity": 1, "text-background-padding": 2,
+            "curve-style": "bezier", "target-arrow-shape": "triangle", "width": 1.5,
+            "line-color": CORES.caneta, "target-arrow-color": CORES.caneta, "arrow-scale": 1.05,
+            "label": "data(label)", "font-family": FONTE, "font-size": 16, "color": CORES.grafite,
+            "text-background-color": CORES.papel, "text-background-opacity": 1, "text-background-padding": 2,
             "loop-direction": "-45deg", "loop-sweep": "-60deg", "control-point-step-size": 50,
         },
     },
-    {selector: "edge.inicial", style: {"line-color": CORES.texto, "target-arrow-color": CORES.texto, "width": 2}},
+    {selector: "edge.inicial", style: {"width": 2}},
+    // Transição usada no passo: um traço de marca-texto por baixo da linha.
     {
         selector: "edge.usada", style: {
-            "line-color": CORES.ativo, "target-arrow-color": CORES.ativo, "width": 3.5, "z-index": 10,
-            "color": "#8a5a00", "font-weight": 700,
+            "width": 2.5, "z-index": 10, "font-weight": 600,
+            "underlay-color": CORES.marcaTexto, "underlay-opacity": 1, "underlay-padding": 5,
+            "text-background-color": CORES.marcaTexto,
         },
     },
 ];
@@ -63,7 +71,7 @@ function desenharAutomato(conteiner, automato, anterior) {
 
     for (const e of automato.estados) {
         const final = automato.finais.includes(e);
-        elementos.push({data: {id: "e:" + e, label: e}, classes: "estado" + (final ? " final" : "")});
+        elementos.push({data: {id: "e:" + e, label: nomeEstado(e)}, classes: "estado" + (final ? " final" : "")});
     }
     elementos.push({data: {id: "__seta", source: "__inicio", target: "e:" + automato.inicial, label: ""}, classes: "inicial"});
 
@@ -84,14 +92,22 @@ function desenharAutomato(conteiner, automato, anterior) {
 
     const cy = cytoscape({
         container: conteiner, elements: elementos, style: ESTILO_AUTOMATO,
-        layout: {name: "dagre", rankDir: "LR", nodeSep: 40, rankSep: 60, edgeSep: 20, padding: 20},
+        layout: {name: "dagre", rankDir: "LR", nodeSep: 40, rankSep: 64, edgeSep: 20, padding: 24},
         wheelSensitivity: 0.3, minZoom: 0.2, maxZoom: 2.5,
     });
+    enquadrar(cy);
+    return cy;
+}
+
+// Enquadra o desenho no espaço disponível (ao desenhar, trocar de tela ou
+// redimensionar a janela), sem ampliar demais autômatos pequenos.
+function enquadrar(cy) {
+    cy.resize();
+    cy.fit(undefined, 24);
     if (cy.zoom() > 1.4) {
         cy.zoom(1.4);
         cy.center();
     }
-    return cy;
 }
 
 // Destaca os estados ativos e as transições usadas num passo da execução.
@@ -114,20 +130,24 @@ const ESTILO_ARVORE = [
     {
         selector: "node", style: {
             "label": "data(label)", "text-valign": "center", "text-halign": "center",
-            "width": 40, "height": 40, "font-size": 12, "font-weight": 600, "color": CORES.texto,
-            "background-color": "#fff", "border-width": 2, "border-color": CORES.interno,
+            "width": 40, "height": 40, "font-family": FONTE, "font-style": "italic", "font-size": 16,
+            "color": CORES.grafite, "background-color": CORES.papel, "border-width": 1.5, "border-color": CORES.interno,
         },
     },
-    {selector: "node.ativo", style: {"background-color": CORES.ativoClaro, "border-color": CORES.ativo, "border-width": 3}},
-    {selector: "node.aceito", style: {"background-color": CORES.aceitoClaro, "border-color": CORES.aceito, "border-width": 4, "border-style": "double"}},
-    {selector: "node.morto", style: {"background-color": CORES.mortoClaro, "border-color": CORES.morto}},
+    {selector: "node.ativo", style: {"background-color": CORES.marcaTexto, "border-color": CORES.caneta, "border-width": 2}},
+    {
+        selector: "node.aceito", style: {
+            "background-color": CORES.verdeClaro, "border-color": CORES.verde, "border-width": 6, "border-style": "double",
+        },
+    },
+    {selector: "node.morto", style: {"background-color": CORES.vermelhoClaro, "border-color": CORES.vermelho, "border-width": 2, "color": CORES.vermelho}},
     {selector: "node.cortado", style: {"border-color": CORES.cortado, "border-style": "dashed"}},
     {
         selector: "edge", style: {
-            "curve-style": "bezier", "target-arrow-shape": "triangle", "width": 1.5,
-            "line-color": "#c3c8d4", "target-arrow-color": "#c3c8d4",
-            "label": "data(label)", "font-size": 12, "color": CORES.primaria, "font-weight": 600,
-            "text-background-color": "#fbfcfe", "text-background-opacity": 1, "text-background-padding": 1,
+            "curve-style": "bezier", "target-arrow-shape": "triangle", "width": 1.2, "arrow-scale": .9,
+            "line-color": CORES.aresta, "target-arrow-color": CORES.aresta,
+            "label": "data(label)", "font-family": FONTE, "font-size": 15, "color": CORES.caneta,
+            "text-background-color": CORES.papel, "text-background-opacity": 1, "text-background-padding": 1,
         },
     },
     {selector: "edge.epsilon", style: {"line-style": "dashed"}},
@@ -139,7 +159,7 @@ function desenharArvore(conteiner, arvore, anterior) {
     if (anterior) anterior.destroy();
     const elementos = [];
     for (const n of arvore.nos) {
-        elementos.push({data: {id: "n" + n.id, label: n.estado}});
+        elementos.push({data: {id: "n" + n.id, label: nomeEstado(n.estado)}});
         if (n.pai >= 0) {
             elementos.push({
                 data: {id: "a" + n.id, source: "n" + n.pai, target: "n" + n.id, label: n.simbolo},
