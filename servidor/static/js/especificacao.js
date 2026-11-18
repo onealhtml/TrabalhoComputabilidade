@@ -220,8 +220,9 @@ async function validarNoServidor() {
     const temEpsilon = a.transicoes.some(t => t.simbolo === EPSILON);
     const naoDet = a.transicoes.some(t => t.para.length > 1) || temEpsilon;
     aviso.className = "aviso ok";
-    aviso.textContent = `Autômato válido: ${a.estados.length} estados, ${a.alfabeto.length} símbolos` +
-        (temEpsilon ? " · AFND-ε (tem transições ε)" : naoDet ? " · AFND" : " · determinístico");
+    const qtd = (n, palavra) => `${n} ${palavra}${n === 1 ? "" : "s"}`;
+    const tipo = temEpsilon ? "AFND-ε" : naoDet ? "AFND" : "autômato determinístico";
+    aviso.textContent = `Válido: ${tipo} com ${qtd(a.estados.length, "estado")} e ${qtd(a.alfabeto.length, "símbolo")}.`;
     cyEspecificacao = desenharAutomato($("grafo-especificacao"), a, cyEspecificacao);
 }
 
@@ -316,8 +317,5 @@ $("sel-exemplo").addEventListener("change", () => {
 });
 
 window.addEventListener("tela-mudou", () => {
-    if (cyEspecificacao) {
-        cyEspecificacao.resize();
-        cyEspecificacao.fit(undefined, 20);
-    }
+    if (cyEspecificacao) enquadrar(cyEspecificacao);
 });

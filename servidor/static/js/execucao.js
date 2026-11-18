@@ -12,65 +12,81 @@ function ultimoPasso() {
     return trace ? trace.passos.length - 1 : 0;
 }
 
-function tags(estados, finais) {
-    if (estados.length === 0) return '<span class="estado-tag nenhum">nenhum (∅)</span>';
-    return estados.map(e => `<span class="estado-tag ${finais.includes(e) ? "final" : ""}"
-        title="${finais.includes(e) ? "estado final" : ""}">${escaparHtml(e)}</span>`).join("");
+// Um estado no texto, como nos livros (q₀); estados finais ganham o círculo duplo.
+function estadoHtml(e, finais) {
+    const final = finais.includes(e);
+    return `<span class="estado${final ? " final" : ""}"${final ? ' title="estado final"' : ""}>${escaparHtml(nomeEstado(e))}</span>`;
+}
+
+// Conjunto de estados em notação matemática: {q₀, q₁}, ou ∅ se vazio.
+function conjuntoHtml(estados, finais) {
+    if (estados.length === 0) return '<span class="conjunto vazio-conj" title="nenhum estado">∅</span>';
+    return `<span class="conjunto">{${estados.map(e => estadoHtml(e, finais)).join(", ")}}</span>`;
 }
 
 function simboloHtml(s) {
     return `<code>${escaparHtml(s)}</code>`;
 }
 
+// A fita: símbolos já lidos esmaecidos, a cabeça (▼) sobre o próximo símbolo e
+// uma célula em branco no fim, onde a cabeça para quando tudo foi lido.
+function renderizarFita(p) {
+    const n = trace.sentenca.length;
+    let celulas = "";
+    [...trace.sentenca].forEach((c, i) => {
+        const classe = i < passoAtual ? "lido" : i === passoAtual ? "atual" : "";
+        celulas += `<span class="celula ${classe}">${escaparHtml(c)}</span>`;
+    });
+    celulas += `<span class="celula fim${passoAtual === n ? " atual" : ""}" title="fim da entrada"></span>`;
+
+    $("fita").innerHTML = `<p class="fita-info"><span>Passo ${passoAtual} de ${n}</span>
+        <span>lido: <b>${escaparHtml(p.consumido) || "ε"}</b></span>
+        <span>falta ler: <b>${escaparHtml(p.restante) || "ε"}</b></span></p>
+        <div class="celulas" aria-label="Fita de entrada">${celulas}</div>`;
+    $("fita").querySelector(".celula.atual")?.scrollIntoView({block: "nearest", inline: "center"});
+}
+
 function renderizarSituacao() {
     const p = trace.passos[passoAtual];
     const finais = trace.automato.finais;
-    const n = trace.sentenca.length;
     const fim = passoAtual === ultimoPasso();
+    renderizarFita(p);
 
-    let fita = "";
-    if (n === 0) fita = '<span class="vazia">ε (sentença vazia)</span>';
-    [...trace.sentenca].forEach((c, i) => {
-        const classe = i < passoAtual ? "lido" : i === passoAtual ? "atual" : "";
-        fita += `<span class="${classe}">${escaparHtml(c)}</span>`;
-    });
-
-    let html = `<div class="contador">Passo ${passoAtual} de ${n} · consumido: <b>${escaparHtml(p.consumido) || "ε"}</b>
-                · restante: <b>${escaparHtml(p.restante) || "ε"}</b></div>
-                <div class="fita">${fita}</div>`;
-
+    const linha = (rotulo, valor) => `<dt>${rotulo}</dt><dd>${valor}</dd>`;
+    let html = '<dl class="passo">';
     if (passoAtual === 0) {
-        html += `<div class="estados-linha"><b>Início:</b> estado inicial ${simboloHtml(trace.automato.inicial)}</div>`;
+        html += linha("Início", `<span class="conjunto">${estadoHtml(trace.automato.inicial, finais)}</span>`);
     } else {
-        html += `<div class="estados-linha"><b>Símbolo lido:</b> ${simboloHtml(p.simbolo)}</div>
-                 <div class="estados-linha"><b>Alcançados lendo ${simboloHtml(p.simbolo)}:</b>
-                     ${tags(p.estados_antes_fecho, finais)}</div>`;
+        html += linha("Símbolo lido", simboloHtml(p.simbolo));
+        html += linha(`Alcançados lendo ${simboloHtml(p.simbolo)}`, conjuntoHtml(p.estados_antes_fecho, finais));
     }
-    html += `<div class="estados-linha"><b>Estados atuais (após fecho-ε):</b> ${tags(p.estados, finais)}</div>`;
-
+    html += linha("Estados atuais, após o fecho-ε", conjuntoHtml(p.estados, finais));
     if (!fim) {
         const proximo = trace.passos[passoAtual + 1];
-        html += `<div class="estados-linha"><b>Possíveis lendo ${simboloHtml(proximo.simbolo)}:</b>
-                 ${tags(proximo.estados, finais)}</div>`;
+        html += linha(`Possíveis lendo ${simboloHtml(proximo.simbolo)}`, conjuntoHtml(proximo.estados, finais));
     }
+    html += "</dl>";
 
     const ganhos = p.estados.filter(e => !p.estados_antes_fecho.includes(e));
     if (ganhos.length > 0) {
-        html += `<p class="explicacao">As transições ε acrescentaram ${ganhos.map(simboloHtml).join(", ")} sem consumir entrada.</p>`;
+        const lista = ganhos.map(e => `<span class="conjunto">${estadoHtml(e, finais)}</span>`).join(", ");
+        html += `<p class="explicacao">As transições ε acrescentaram ${lista} sem consumir entrada.</p>`;
     }
 
     if (fim) {
         const aceita = trace.resultado === "ACEITA";
         let motivo;
         if (aceita) {
-            const finaisAtivos = p.estados.filter(e => finais.includes(e));
-            motivo = `a entrada foi toda lida e ${finaisAtivos.map(simboloHtml).join(", ")} é estado final`;
+            const finaisAtivos = p.estados.filter(e => finais.includes(e))
+                .map(e => `<span class="conjunto">${estadoHtml(e, finais)}</span>`);
+            motivo = `A entrada foi toda lida e ${finaisAtivos.join(", ")} é estado final.`;
         } else if (p.estados.length === 0) {
-            motivo = `nenhum caminho consegue ler ${simboloHtml(p.simbolo)} na posição ${passoAtual}: todos morreram`;
+            motivo = `Nenhum caminho consegue ler ${simboloHtml(p.simbolo)} na posição ${passoAtual}: todos morreram.`;
         } else {
-            motivo = "a entrada foi toda lida, mas nenhum estado atual é final";
+            motivo = "A entrada foi toda lida, mas nenhum estado atual é final.";
         }
-        html += `<div class="resultado ${aceita ? "aceita" : "rejeitada"}">${trace.resultado}<small>${motivo}</small></div>`;
+        html += `<div class="resultado ${aceita ? "aceita" : "rejeitada"}"><span class="palavra">${trace.resultado}</span>
+                 <small>${motivo}</small></div>`;
     }
     $("situacao").innerHTML = html;
 }
@@ -96,6 +112,7 @@ function limparExecucao(mensagem) {
     trace = null;
     ["btn-reiniciar", "btn-anterior", "btn-proximo", "btn-tudo"].forEach(id => $(id).disabled = true);
     $("situacao").innerHTML = `<p class="vazio">${mensagem}</p>`;
+    $("fita").innerHTML = "";
     $("aviso-arvore").hidden = true;
     if (cyArvore) {
         cyArvore.destroy();
@@ -129,8 +146,10 @@ async function carregarSentenca() {
 // Sentenças de teste dos exemplos, como botões.
 function definirSugestoes(aceitas, rejeitadas) {
     const chip = (s, classe) => `<button class="chip ${classe}" data-sentenca="${escaparHtml(s)}">${escaparHtml(s) || "ε"}</button>`;
-    $("sugestoes").innerHTML = aceitas.length + rejeitadas.length === 0 ? "" :
-        "Testar: " + aceitas.map(s => chip(s, "aceita")).join("") + rejeitadas.map(s => chip(s, "rejeita")).join("");
+    const grupo = (titulo, lista, classe) => lista.length === 0 ? "" :
+        `<span class="grupo-sug"><span class="titulo-sug">${titulo}</span>${lista.map(s => chip(s, classe)).join("")}</span>`;
+    $("sugestoes").innerHTML = grupo("Deveriam ser aceitas:", aceitas, "aceita") +
+        grupo("Deveriam ser rejeitadas:", rejeitadas, "rejeita");
     $("sugestoes").querySelectorAll(".chip").forEach(b => b.addEventListener("click", () => {
         $("campo-sentenca").value = b.dataset.sentenca;
         carregarSentenca();
@@ -160,7 +179,8 @@ window.addEventListener("automato-mudou", () => {
 });
 
 window.addEventListener("tela-mudou", () => {
-    for (const cy of [cyExecucao, cyArvore]) if (cy) cy.resize();
+    if (cyExecucao) enquadrar(cyExecucao);
+    if (cyArvore) cyArvore.resize();
     if (trace) atualizar();
     else if (automatoValido && $("tela-execucao").classList.contains("ativa")) {
         cyExecucao = desenharAutomato($("grafo-execucao"), automatoValido, cyExecucao);
@@ -173,6 +193,7 @@ window.addEventListener("tela-mudou", () => {
 
 async function iniciar() {
     limparExecucao("Digite uma sentença e clique em <b>Carregar sentença</b>.");
+    await fontesCarregadas;
     const exemplos = await api("/api/exemplos");
     if (Array.isArray(exemplos)) {
         $("sel-exemplo").innerHTML += exemplos.map(n => `<option value="${escaparHtml(n)}">${escaparHtml(n)}</option>`).join("");
