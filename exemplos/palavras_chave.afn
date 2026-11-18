@@ -1,0 +1,46 @@
+# Palavras-chave da linguagem C (AFND).
+# Reconhece exatamente: if int for float do double else while return
+# Não determinismo: lendo 'i' no estado inicial o autômato pode estar
+# começando "if" ou "int"; lendo 'f', "for" ou "float"; lendo 'd', "do" ou
+# "double". Cada palavra tem o seu próprio caminho até um estado final.
+#
+# aceita: if int for float do double else while return
+# rejeita: ε i in fo doub iff integer whilee retur xyz main
+alfabeto: a b c d e f g h i j k l m n o p q r s t u v w x y z
+estados: q0 if1 if2 int1 int2 int3 for1 for2 for3 flo1 flo2 flo3 flo4 flo5 do1 do2 dou1 dou2 dou3 dou4 dou5 dou6 el1 el2 el3 el4 wh1 wh2 wh3 wh4 wh5 re1 re2 re3 re4 re5 re6
+inicial: q0
+finais: if2 int3 for3 flo5 do2 dou6 el4 wh5 re6
+transicoes:
+q0 i -> if1 int1
+if1 f -> if2
+int1 n -> int2
+int2 t -> int3
+q0 f -> for1 flo1
+for1 o -> for2
+for2 r -> for3
+flo1 l -> flo2
+flo2 o -> flo3
+flo3 a -> flo4
+flo4 t -> flo5
+q0 d -> do1 dou1
+do1 o -> do2
+dou1 o -> dou2
+dou2 u -> dou3
+dou3 b -> dou4
+dou4 l -> dou5
+dou5 e -> dou6
+q0 e -> el1
+el1 l -> el2
+el2 s -> el3
+el3 e -> el4
+q0 w -> wh1
+wh1 h -> wh2
+wh2 i -> wh3
+wh3 l -> wh4
+wh4 e -> wh5
+q0 r -> re1
+re1 e -> re2
+re2 t -> re3
+re3 u -> re4
+re4 r -> re5
+re5 n -> re6

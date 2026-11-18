@@ -1,0 +1,16 @@
+# Livre 1: sentenças sobre {a, b} que terminam com "abb" (AFND).
+# Em q0 o autômato "adivinha" em qual 'a' começa o sufixo abb: lendo 'a'
+# ele pode continuar em q0 ou ir para q1. A árvore de execução mostra um
+# ramo novo para cada 'a' da entrada; só o palpite certo chega em q3.
+#
+# aceita: abb aabb babb ababb bbbabb abbabb
+# rejeita: ε a ab abba bbb abab abbb
+alfabeto: a b
+estados: q0 q1 q2 q3
+inicial: q0
+finais: q3
+transicoes:
+q0 a -> q0 q1
+q0 b -> q0
+q1 b -> q2
+q2 b -> q3

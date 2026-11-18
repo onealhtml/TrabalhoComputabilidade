@@ -1,0 +1,14 @@
+# Teste: ciclo de transições ε (q1 -> q2 -> q3 -> q1) e cadeia de ε.
+# aceita: ε a aa b ab
+# rejeita: ba aba
+alfabeto: a b
+estados: q0 q1 q2 q3 q4
+inicial: q0
+finais: q4
+transicoes:
+q0 a -> q0
+q0 & -> q1
+q1 & -> q2
+q2 & -> q3
+q3 & -> q1 q4
+q3 b -> q4
