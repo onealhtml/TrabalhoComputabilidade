@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Simulador de AFND</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Ccircle cx=%2716%27 cy=%2716%27 r=%2714%27 fill=%27%233949ab%27/%3E%3Ccircle cx=%2716%27 cy=%2716%27 r=%279%27 fill=%27none%27 stroke=%27white%27 stroke-width=%272%27/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+<header class="topo">
+    <div class="marca">
+        <span class="logo">q₀</span>
+        <div>
+            <h1>Simulador de AFND / AFND-ε</h1>
+            <p>Computabilidade · UNISC</p>
+        </div>
+    </div>
+    <nav class="abas">
+        <button class="aba ativa" data-tela="especificacao">1. Especificação</button>
+        <button class="aba" data-tela="execucao">2. Execução passo a passo</button>
+    </nav>
+</header>
+
+<main>
+    <!-- ====================== TELA DE ESPECIFICAÇÃO ====================== -->
+    <section id="tela-especificacao" class="tela ativa">
+        <div class="barra">
+            <button id="btn-novo">Novo</button>
+            <label class="botao">Abrir arquivo…
+                <input type="file" id="arquivo-abrir" accept=".afn,.txt" hidden>
+            </label>
+            <span class="grupo">
+                <input id="nome-arquivo" value="automato" aria-label="Nome do arquivo" size="14">
+                <button id="btn-salvar">Salvar arquivo (.afn)</button>
+            </span>
+            <span class="grupo">
+                <label for="sel-exemplo">Exemplo:</label>
+                <select id="sel-exemplo"><option value="">— escolher —</option></select>
+            </span>
+        </div>
+
+        <div class="colunas">
+            <div class="painel">
+                <h2>Definição</h2>
+                <div class="campo">
+                    <label for="campo-alfabeto">Alfabeto (Σ)</label>
+                    <input id="campo-alfabeto" placeholder="símbolos separados por espaço, ex.: a b c">
+                    <small>Cada símbolo é um único caractere. <code>&amp;</code> é reservado para ε.</small>
+                </div>
+                <div class="campo">
+                    <label for="campo-estados">Estados (Q)</label>
+                    <input id="campo-estados" placeholder="ex.: q0 q1 q2">
+                </div>
+                <div class="linha-campos">
+                    <div class="campo">
+                        <label for="campo-inicial">Estado inicial</label>
+                        <select id="campo-inicial"></select>
+                    </div>
+                    <div class="campo">
+                        <span class="rotulo">Estados finais (F)</span>
+                        <div id="campo-finais" class="checks"></div>
+                    </div>
+                </div>
+
+                <div class="titulo-transicoes">
+                    <h3>Transições (δ)</h3>
+                    <div class="alternar">
+                        <button id="modo-tabela" class="ativo">Tabela</button>
+                        <button id="modo-lista">Lista</button>
+                    </div>
+                </div>
+                <p class="dica">Vários destinos: separe por espaço (ex.: <code>q1 q2</code>). A coluna/símbolo
+                    <b>ε</b> é a transição vazia.</p>
+                <div id="editor-tabela" class="rolagem"></div>
+                <div id="editor-lista" hidden></div>
+            </div>
+
+            <div class="painel">
+                <h2>Autômato</h2>
+                <div id="validacao" class="aviso"></div>
+                <div id="grafo-especificacao" class="grafo"></div>
+                <details class="texto-arquivo">
+                    <summary>Ver o arquivo .afn gerado</summary>
+                    <pre id="previa-arquivo"></pre>
+                </details>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====================== TELA DE EXECUÇÃO ====================== -->
+    <section id="tela-execucao" class="tela">
+        <div class="barra">
+            <label for="campo-sentenca">Sentença:</label>
+            <input id="campo-sentenca" placeholder="deixe vazio para testar ε" size="28" autocomplete="off">
+            <button id="btn-executar" class="primario">Carregar sentença</button>
+            <span class="separador"></span>
+            <button id="btn-reiniciar" title="Reiniciar (Home)">⏮ Reiniciar</button>
+            <button id="btn-anterior" title="Passo anterior (←)">◀ Anterior</button>
+            <button id="btn-proximo" title="Próximo passo (→)">Próximo ▶</button>
+            <button id="btn-tudo" title="Executar tudo (End)">Executar tudo ⏭</button>
+        </div>
+        <div id="sugestoes" class="sugestoes"></div>
+        <div id="erro-execucao" class="aviso erro" hidden></div>
+
+        <div class="colunas execucao">
+            <div class="painel">
+                <h2>Situação</h2>
+                <div id="situacao" class="situacao">
+                    <p class="vazio">Digite uma sentença e clique em <b>Carregar sentença</b>.</p>
+                </div>
+            </div>
+            <div class="painel">
+                <h2>Autômato <small>(estados ativos destacados)</small></h2>
+                <div id="grafo-execucao" class="grafo"></div>
+            </div>
+        </div>
+
+        <div class="painel">
+            <h2>Árvore de fluxos de execução</h2>
+            <div class="legenda">
+                <span><i class="cor ativo"></i>caminho ativo</span>
+                <span><i class="cor interno"></i>já percorrido</span>
+                <span><i class="cor aceito"></i>aceita</span>
+                <span><i class="cor morto"></i>morreu</span>
+                <span><i class="cor cortado"></i>não expandido</span>
+            </div>
+            <div id="aviso-arvore" class="aviso" hidden></div>
+            <div id="grafo-arvore" class="grafo arvore"></div>
+        </div>
+    </section>
+</main>
+
+<script src="vendor/cytoscape.min.js"></script>
+<script src="vendor/dagre.min.js"></script>
+<script src="vendor/cytoscape-dagre.js"></script>
+<script src="js/comum.js"></script>
+<script src="js/desenho.js"></script>
+<script src="js/especificacao.js"></script>
+<script src="js/execucao.js"></script>
+</body>
+</html>
